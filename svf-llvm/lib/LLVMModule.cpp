@@ -90,6 +90,7 @@ SVFModule* LLVMModuleSet::buildSVFModule(Module &mod)
     SVFStat::timeOfBuildingLLVMModule = (endSVFModuleTime - startSVFModuleTime)/TIMEINTERVAL;
 
     mset->buildSymbolTable();
+    SVFUtil::errs() << SVFUtil::errMsg("Finish LLVMModuleSet::buildSymbolTable()!!!\n");
     // Don't releaseLLVMModuleSet() here, as IRBuilder might still need LLVMMoudleSet
     return SVFModule::getSVFModule();
 }
@@ -190,6 +191,8 @@ void LLVMModuleSet::createSVFDataStructure()
     /// then traverse candidate sets
     for (const Module& mod : modules)
     {
+        Map<const Value*, SVFValue*> toSetValueAttr;
+
         /// GlobalVariable
         for (const GlobalVariable& global :  mod.globals())
         {
@@ -197,6 +200,7 @@ void LLVMModuleSet::createSVFDataStructure()
                 global.getName().str(), getSVFType(global.getType()));
             svfModule->addGlobalSet(svfglobal);
             addGlobalValueMap(&global, svfglobal);
+            toSetValueAttr.emplace(&global, svfglobal);
         }
 
         /// GlobalAlias
@@ -206,6 +210,7 @@ void LLVMModuleSet::createSVFDataStructure()
                 alias.getName().str(), getSVFType(alias.getType()));
             svfModule->addAliasSet(svfalias);
             addGlobalValueMap(&alias, svfalias);
+            toSetValueAttr.emplace(&alias, svfalias);
         }
 
         /// GlobalIFunc
@@ -215,6 +220,13 @@ void LLVMModuleSet::createSVFDataStructure()
                 ifunc.getName().str(), getSVFType(ifunc.getType()));
             svfModule->addAliasSet(svfifunc);
             addGlobalValueMap(&ifunc, svfifunc);
+            toSetValueAttr.emplace(&ifunc, svfifunc);
+        }
+
+        // Perform setValueAttr for "const GlobalValue* glob" and "SVFGlobalValue* svfglob" together.
+        for (auto [globVal, svfglob] : toSetValueAttr)
+        {
+            setValueAttr(globVal,svfglob);
         }
     }
 }

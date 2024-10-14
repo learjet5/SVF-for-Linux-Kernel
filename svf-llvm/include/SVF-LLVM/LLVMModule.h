@@ -170,8 +170,14 @@ public:
     }
     inline void addGlobalValueMap(const GlobalValue* glob, SVFGlobalValue* svfglob)
     {
+        auto glob_var = llvm::dyn_cast<llvm::GlobalVariable>(glob);
+        if (hasGlobalRep(glob_var))
+        {
+            LLVMConst2SVFConst[getGlobalRep(glob_var)] = svfglob;
+        }
         LLVMConst2SVFConst[glob] = svfglob;
-        setValueAttr(glob,svfglob);
+        // We should do this after all LLVMConst2SVFConst key-values are set. Or there will be an assertion failure.
+        // setValueAttr(glob,svfglob);
     }
     inline void addConstantDataMap(const ConstantData* cd, SVFConstantData* svfcd)
     {

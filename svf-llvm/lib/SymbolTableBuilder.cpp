@@ -93,6 +93,7 @@ void SymbolTableBuilder::buildMemModel(SVFModule* svfModule)
 
     for (Module &M : LLVMModuleSet::getLLVMModuleSet()->getLLVMModules())
     {
+        SVFUtil::errs() << SVFUtil::errMsg("Building Symbol table for module: " + M.getModuleIdentifier() + "\n");
         // Add symbols for all the globals .
         for (const GlobalVariable& gv : M.globals())
         {
