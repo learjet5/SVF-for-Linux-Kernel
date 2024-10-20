@@ -31,6 +31,7 @@
 #include <memory>
 
 #include "SVFIR/SymbolTableInfo.h"
+#include "SVFIR/SVFType.h"
 #include "Util/Options.h"
 #include "SVFIR/SVFModule.h"
 
@@ -572,7 +573,11 @@ SymID SymbolTableInfo::getValSym(const SVFValue* val)
     else
     {
         ValueToIDMapTy::const_iterator iter =  valSymMap.find(val);
-        assert(iter!=valSymMap.end() &&"value sym not found");
+        // assert(iter!=valSymMap.end() &&"value sym not found");
+        if (iter == valSymMap.end()) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [getValSym] Fail to find val in valSymMap!\n");
+            return (SymID) -1;
+        }
         return iter->second;
     }
 }

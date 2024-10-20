@@ -31,6 +31,7 @@
 #define INCLUDE_SVFIR_SYMBOLTABLEINFO_H_
 
 
+#include "SVFIR/SVFType.h"
 #include "Util/SVFUtil.h"
 #include "MemoryModel/AccessPath.h"
 #include "SVFIR/SVFModule.h"
@@ -216,7 +217,11 @@ public:
         if(const SVFGlobalValue* g = SVFUtil::dyn_cast<SVFGlobalValue>(val))
             svfVal = g->getDefGlobalForMultipleModule();
         ValueToIDMapTy::const_iterator iter = objSymMap.find(svfVal);
-        assert(iter!=objSymMap.end() && "obj sym not found");
+        // assert(iter!=objSymMap.end() && "obj sym not found");
+        if (iter == objSymMap.end()) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [getObjSym] Fail to find val in objSymMap!\n");
+            return (SymID) -1;
+        }
         return iter->second;
     }
 

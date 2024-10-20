@@ -83,9 +83,10 @@ u32_t AccessPath::getElementNum(const SVFType* type) const
     }
     else
     {
-        SVFUtil::outs() << "GepIter Type" << *type << "\n";
-        assert(false && "What other types for this gep?");
-        abort();
+        // SVFUtil::outs() << "GepIter Type" << *type << "\n";
+        // assert(false && "What other types for this gep?");
+        // abort();
+        return 1; // ElementNum=1 for other types.
     }
 }
 

@@ -29,6 +29,7 @@
 
 #include "SVF-LLVM/SVFIRBuilder.h"
 #include "SVFIR/SVFModule.h"
+#include "SVFIR/SVFType.h"
 #include "Util/SVFUtil.h"
 #include "SVF-LLVM/BasicTypes.h"
 #include "SVF-LLVM/LLVMUtil.h"
@@ -56,6 +57,7 @@ SVFIR* SVFIRBuilder::build()
     double startTime = SVFStat::getClk(true);
 
     DBOUT(DGENERAL, outs() << pasMsg("\t Building SVFIR ...\n"));
+    SVFUtil::errs() << SVFUtil::errMsg("\n\nBuilding SVFIR ...\n");
 
     // Set SVFModule from SVFIRBuilder
     pag->setModule(svfModule);
@@ -85,14 +87,17 @@ SVFIR* SVFIRBuilder::build()
     /// initial external library information
     /// initial SVFIR nodes
     initialiseNodes();
+    SVFUtil::errs() << SVFUtil::errMsg("[SVFIRBuilder::build()] Finish initialiseNodes().\n");
     /// initial SVFIR edges:
     ///// handle globals
     visitGlobal(svfModule);
+    SVFUtil::errs() << SVFUtil::errMsg("[SVFIRBuilder::build()] Finish visitGlobal(svfModule).\n");
     ///// collect exception vals in the program
 
     /// handle functions
     for (Module& M : LLVMModuleSet::getLLVMModuleSet()->getLLVMModules())
     {
+        SVFUtil::errs() << SVFUtil::errMsg("[SVFIRBuilder::build()] Handle functions for module: " + M.getName().str() + "\n");
         for (Module::const_iterator F = M.begin(), E = M.end(); F != E; ++F)
         {
             const Function& fun = *F;
@@ -145,6 +150,8 @@ SVFIR* SVFIRBuilder::build()
     pag->initialiseCandidatePointers();
 
     pag->setNodeNumAfterPAGBuild(pag->getTotalNodeNum());
+
+    SVFUtil::errs() << SVFUtil::errMsg("[SVFIRBuilder::build()] Finish PAG building!!!\n");
 
     // dump SVFIR
     if (Options::PAGDotGraph())
@@ -501,9 +508,19 @@ void SVFIRBuilder::InitialGlobal(const GlobalVariable *gvar, Constant *C,
     if (C->getType()->isSingleValueType())
     {
         NodeID src = getValueNode(C);
+        if (src == (NodeID) -1)
+        {
+            SVFUtil::errs() << SVFUtil::errMsg("  [InitialGlobal] Fail to getValueNode for Constant C.\n");
+            return;
+        }
         // get the field value if it is available, otherwise we create a dummy field node.
         setCurrentLocation(gvar, nullptr);
         NodeID field = getGlobalVarField(gvar, offset, LLVMModuleSet::getLLVMModuleSet()->getSVFType(C->getType()));
+        if (field == (NodeID) -1)
+        {
+            SVFUtil::errs() << SVFUtil::errMsg("  [InitialGlobal] Fail to getGlobalVarField for field.\n");
+            return;
+        }
 
         if (SVFUtil::isa<GlobalVariable, Function>(C))
         {
@@ -578,6 +595,7 @@ void SVFIRBuilder::visitGlobal(SVFModule* svfModule)
     /// initialize global variable
     for (Module &M : LLVMModuleSet::getLLVMModuleSet()->getLLVMModules())
     {
+        SVFUtil::errs() << SVFUtil::errMsg("[visitGlobal] Handle global variables for module: " + M.getName().str() + "\n");
         for (Module::global_iterator I = M.global_begin(), E = M.global_end(); I != E; ++I)
         {
             GlobalVariable *gvar = &*I;
@@ -594,6 +612,7 @@ void SVFIRBuilder::visitGlobal(SVFModule* svfModule)
                 InitialGlobal(gvar, C, 0);
             }
         }
+        SVFUtil::errs() << SVFUtil::errMsg("  Global variables done.\n");
 
 
         /// initialize global functions
@@ -607,6 +626,7 @@ void SVFIRBuilder::visitGlobal(SVFModule* svfModule)
             setCurrentLocation(fun, nullptr);
             addAddrEdge(obj, idx);
         }
+        SVFUtil::errs() << SVFUtil::errMsg("  Global functions done.\n");
 
         // Handle global aliases (due to linkage of multiple bc files), e.g., @x = internal alias @y. We need to add a copy from y to x.
         for (Module::alias_iterator I = M.alias_begin(), E = M.alias_end(); I != E; I++)
@@ -618,6 +638,7 @@ void SVFIRBuilder::visitGlobal(SVFModule* svfModule)
             setCurrentLocation(alias, nullptr);
             addCopyEdge(src,dst);
         }
+        SVFUtil::errs() << SVFUtil::errMsg("  Global aliases done.\n");
     }
 }
 

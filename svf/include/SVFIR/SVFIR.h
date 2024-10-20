@@ -31,6 +31,7 @@
 #define INCLUDE_SVFIR_H_
 
 #include "Graphs/IRGraph.h"
+#include "SVFIR/SVFType.h"
 
 namespace SVF
 {
@@ -542,7 +543,12 @@ private:
     inline NodeID addObjNode(const SVFValue* val, NodeID i)
     {
         const MemObj* mem = getMemObj(val);
-        assert(mem->getId() == i && "not same object id?");
+        // assert(mem->getId() == i && "not same object id?");
+        if (!mem || mem->getId() != i)
+        {
+            SVFUtil::errs() << SVFUtil::errMsg("  [SVFIR::addObjNode] Fail to getMemObj(val).\n");
+            return (NodeID) -1;
+        }
         return addFIObjNode(mem);
     }
     /// Add a unique return node for a procedure

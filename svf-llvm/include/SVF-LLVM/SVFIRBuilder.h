@@ -35,6 +35,7 @@
 #include "SVF-LLVM/ICFGBuilder.h"
 #include "SVF-LLVM/LLVMModule.h"
 #include "SVF-LLVM/LLVMUtil.h"
+#include "SVFIR/SVFType.h"
 
 namespace SVF
 {
@@ -260,6 +261,10 @@ protected:
     /// Add global black hole Address edge
     void addGlobalBlackHoleAddrEdge(NodeID node, const ConstantExpr *int2Ptrce)
     {
+        if(node == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addGlobalBlackHoleAddrEdge] Bad NodeID!\n");
+            return;
+        }
         const SVFValue* cval = getCurrentValue();
         const SVFBasicBlock* cbb = getCurrentBB();
         setCurrentLocation(int2Ptrce,nullptr);
@@ -284,6 +289,10 @@ protected:
 
     inline void addBlackHoleAddrEdge(NodeID node)
     {
+        if (node == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addBlackHoleAddrEdge] Bad NodeID!\n");
+            return;
+        }
         if(PAGEdge *edge = pag->addBlackHoleAddrStmt(node))
             setCurrentBBAndValueForPAGEdge(edge);
     }
@@ -291,6 +300,10 @@ protected:
     /// Add Address edge
     inline AddrStmt* addAddrEdge(NodeID src, NodeID dst)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addAddrEdge] Bad NodeID!\n");
+            return nullptr;
+        }
         if(AddrStmt *edge = pag->addAddrStmt(src, dst))
         {
             setCurrentBBAndValueForPAGEdge(edge);
@@ -301,6 +314,10 @@ protected:
     /// Add Copy edge
     inline CopyStmt* addCopyEdge(NodeID src, NodeID dst)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addCopyEdge] Bad NodeID!\n");
+            return nullptr;
+        }
         if(CopyStmt *edge = pag->addCopyStmt(src, dst))
         {
             setCurrentBBAndValueForPAGEdge(edge);
@@ -324,18 +341,30 @@ protected:
     /// Add Copy edge
     inline void addCmpEdge(NodeID op1, NodeID op2, NodeID dst, u32_t predict)
     {
+        if(op1 == (NodeID) -1 || op2 == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addCmpEdge] Bad NodeID!\n");
+            return;
+        }
         if(CmpStmt *edge = pag->addCmpStmt(op1, op2, dst, predict))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Copy edge
     inline void addBinaryOPEdge(NodeID op1, NodeID op2, NodeID dst, u32_t opcode)
     {
+        if(op1 == (NodeID) -1 || op2 == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addBinaryOPEdge] Bad NodeID!\n");
+            return;
+        }
         if(BinaryOPStmt *edge = pag->addBinaryOPStmt(op1, op2, dst, opcode))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Unary edge
     inline void addUnaryOPEdge(NodeID src, NodeID dst, u32_t opcode)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addUnaryOPEdge] Bad NodeID!\n");
+            return;
+        }
         if(UnaryOPStmt *edge = pag->addUnaryOPStmt(src, dst, opcode))
             setCurrentBBAndValueForPAGEdge(edge);
     }
@@ -348,12 +377,20 @@ protected:
     /// Add Load edge
     inline void addLoadEdge(NodeID src, NodeID dst)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addLoadEdge] Bad NodeID!\n");
+            return;
+        }
         if(LoadStmt *edge = pag->addLoadStmt(src, dst))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Store edge
     inline void addStoreEdge(NodeID src, NodeID dst)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addStoreEdge] Bad NodeID!\n");
+            return;
+        }
         IntraICFGNode* node;
         if (const SVFInstruction* inst = SVFUtil::dyn_cast<SVFInstruction>(curVal))
             node = pag->getICFG()->getIntraICFGNode(inst);
@@ -365,30 +402,50 @@ protected:
     /// Add Call edge
     inline void addCallEdge(NodeID src, NodeID dst, const CallICFGNode* cs, const FunEntryICFGNode* entry)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addCallEdge] Bad NodeID!\n");
+            return;
+        }
         if (CallPE* edge = pag->addCallPE(src, dst, cs, entry))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Return edge
     inline void addRetEdge(NodeID src, NodeID dst, const CallICFGNode* cs, const FunExitICFGNode* exit)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addRetEdge] Bad NodeID!\n");
+            return;
+        }
         if (RetPE* edge = pag->addRetPE(src, dst, cs, exit))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Gep edge
     inline void addGepEdge(NodeID src, NodeID dst, const AccessPath& ap, bool constGep)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addGepEdge] Bad NodeID!\n");
+            return;
+        }
         if (GepStmt* edge = pag->addGepStmt(src, dst, ap, constGep))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Offset(Gep) edge
     inline void addNormalGepEdge(NodeID src, NodeID dst, const AccessPath& ap)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addNormalGepEdge] Bad NodeID!\n");
+            return;
+        }
         if (GepStmt* edge = pag->addNormalGepStmt(src, dst, ap))
             setCurrentBBAndValueForPAGEdge(edge);
     }
     /// Add Variant(Gep) edge
     inline void addVariantGepEdge(NodeID src, NodeID dst, const AccessPath& ap)
     {
+        if(src == (NodeID) -1 || dst == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [addVariantGepEdge] Bad NodeID!\n");
+            return;
+        }
         if (GepStmt* edge = pag->addVariantGepStmt(src, dst, ap))
             setCurrentBBAndValueForPAGEdge(edge);
     }

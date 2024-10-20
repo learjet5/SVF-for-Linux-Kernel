@@ -32,6 +32,7 @@
 #define IRGRAPH_H_
 
 #include "SVFIR/SVFStatements.h"
+#include "SVFIR/SVFType.h"
 #include "SVFIR/SVFVariables.h"
 #include "Util/NodeIDAllocator.h"
 #include "Util/SVFUtil.h"
@@ -98,6 +99,9 @@ protected:
     /// get MemObj according to LLVM value
     inline const MemObj* getMemObj(const SVFValue* val) const
     {
+        if (symInfo->getObjSym(val) == (SymID) -1) {
+            return nullptr;
+        }
         return symInfo->getObj(symInfo->getObjSym(val));
     }
 
