@@ -1272,11 +1272,16 @@ SVFValue* LLVMModuleSet::getSVFValue(const Value* value)
 
 const Type* LLVMModuleSet::getLLVMType(const SVFType* T) const
 {
-    for(LLVMType2SVFTypeMap::const_iterator it = LLVMType2SVFType.begin(), eit = LLVMType2SVFType.end(); it!=eit; ++it)
-    {
-        if (it->second == T)
-            return it->first;
-    }
+    // Use SVFType2LLVMType to do the mapping instead of using for loop to search.
+    assert(T && "SVFType should not be null");
+    SVFType2LLVMTypeMap::const_iterator it = SVFType2LLVMType.find(T);
+    if (it != SVFType2LLVMType.end())
+        return it->second;
+    // for(LLVMType2SVFTypeMap::const_iterator it = LLVMType2SVFType.begin(), eit = LLVMType2SVFType.end(); it!=eit; ++it)
+    // {
+    //     if (it->second == T)
+    //         return it->first;
+    // }
     assert(false && "can't find the corresponding LLVM Type");
     abort();
 }
@@ -1391,6 +1396,7 @@ SVFType* LLVMModuleSet::addSVFTypeInfo(const Type* T)
 
     symInfo->addTypeInfo(svftype);
     LLVMType2SVFType[T] = svftype;
+    SVFType2LLVMType[svftype] = T;
     if (const PointerType* pt = SVFUtil::dyn_cast<PointerType>(T))
     {
         //cast svftype to SVFPointerType

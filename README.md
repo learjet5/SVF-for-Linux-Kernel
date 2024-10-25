@@ -4,6 +4,9 @@ This repo is based on [SVF-2.8](https://github.com/SVF-tools/SVF/releases/tag/SV
 
 We modify the code further to perform Linux kernel static analysis, which can work together with [LLVM-14.0.6](https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.6).
 
+TODO:
+- Manually merge some useful SVF commits for current customized version. (By reading the SVF releases changelog.)
+
 ---
 
 Original links:

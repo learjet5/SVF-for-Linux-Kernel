@@ -62,6 +62,9 @@ public:
     typedef Map<const Type*, SVFType*> LLVMType2SVFTypeMap;
     typedef Map<const Type*, StInfo*> Type2TypeInfoMap;
 
+    // New added.
+    typedef Map<const SVFType*, const Type*> SVFType2LLVMTypeMap;
+
 private:
     static LLVMModuleSet* llvmModuleSet;
     static bool preProcessed;
@@ -89,6 +92,9 @@ private:
     SVFValue2LLVMValueMap SVFValue2LLVMValue;
     LLVMType2SVFTypeMap LLVMType2SVFType;
     Type2TypeInfoMap Type2TypeInfo;
+
+    // Add more maps in LLVMModuleSet.
+    SVFType2LLVMTypeMap SVFType2LLVMType;
 
     /// Constructor
     LLVMModuleSet();
