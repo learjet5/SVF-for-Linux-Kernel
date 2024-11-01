@@ -141,7 +141,12 @@ public:
     ///getNode - Return the node corresponding to the specified pointer.
     inline NodeID getValueNode(const SVFValue* V)
     {
-        return symInfo->getValSym(V);
+        // Added extra log info.
+        NodeID result = symInfo->getValSym(V);
+        if(result == (NodeID) -1) {
+            SVFUtil::errs() << SVFUtil::errMsg("  [getValueNode] Fail to get PAG ValueNode!\n");
+        }
+        return result;
     }
     inline bool hasValueNode(const SVFValue* V)
     {

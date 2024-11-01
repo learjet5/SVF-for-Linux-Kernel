@@ -64,6 +64,8 @@ public:
 
     // New added.
     typedef Map<const SVFType*, const Type*> SVFType2LLVMTypeMap;
+    typedef Map<const SVFFunction*, const Function*> SVFFun2LLVMFunMap;
+    typedef Map<const SVFInstruction*, const Instruction*> SVFInst2LLVMInstMap;
 
 private:
     static LLVMModuleSet* llvmModuleSet;
@@ -95,6 +97,8 @@ private:
 
     // Add more maps in LLVMModuleSet.
     SVFType2LLVMTypeMap SVFType2LLVMType;
+    SVFFun2LLVMFunMap SVFFunc2LLVMFunc;
+    SVFInst2LLVMInstMap SVFInst2LLVMInst;
 
     /// Constructor
     LLVMModuleSet();
@@ -157,6 +161,7 @@ public:
     inline void addFunctionMap(const Function* func, SVFFunction* svfFunc)
     {
         LLVMFunc2SVFFunc[func] = svfFunc;
+        SVFFunc2LLVMFunc[svfFunc] = func;
         setValueAttr(func,svfFunc);
     }
     inline void addBasicBlockMap(const BasicBlock* bb, SVFBasicBlock* svfBB)
@@ -167,6 +172,7 @@ public:
     inline void addInstructionMap(const Instruction* inst, SVFInstruction* svfInst)
     {
         LLVMInst2SVFInst[inst] = svfInst;
+        SVFInst2LLVMInst[svfInst] = inst;
         setValueAttr(inst,svfInst);
     }
     inline void addArgumentMap(const Argument* arg, SVFArgument* svfArg)
@@ -207,6 +213,21 @@ public:
     {
         SVFValue2LLVMValueMap::const_iterator it = SVFValue2LLVMValue.find(value);
         assert(it!=SVFValue2LLVMValue.end() && "can't find corresponding llvm value!");
+        return it->second;
+    }
+
+    // Added extra utility functions.
+    const Function* getLLVMFunction(const SVFFunction* svfFunc) const
+    {
+        SVFFun2LLVMFunMap::const_iterator it = SVFFunc2LLVMFunc.find(svfFunc);
+        assert(it!=SVFFunc2LLVMFunc.end() && "can't find corresponding llvm function!");
+        return it->second;
+    }
+
+    const Instruction* getLLVMInstruction(const SVFInstruction* svfInst) const
+    {
+        SVFInst2LLVMInstMap::const_iterator it = SVFInst2LLVMInst.find(svfInst);
+        assert(it!=SVFInst2LLVMInst.end() && "can't find corresponding llvm instruction!");
         return it->second;
     }
 
