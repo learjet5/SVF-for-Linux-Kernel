@@ -127,7 +127,64 @@ void SVFIRBuilder::handleExtCall(const CallBase* cs, const SVFFunction* svfCalle
 {
     const SVFInstruction* svfInst = LLVMModuleSet::getLLVMModuleSet()->getSVFInstruction(cs);
     const SVFCallInst* svfCall = SVFUtil::cast<SVFCallInst>(svfInst);
+    const SVFFunction* svfFun = svfCallee;
+    const Function *F = LLVMModuleSet::getLLVMModuleSet()->getLLVMFunction(svfFun);
 
+    // Normal operations for DirectCall.
+    NodeID dstrec = getValueNode(cs);
+    if (!cs->getType()->isVoidTy())
+    {
+        NodeID srcret = getReturnNode(svfFun);
+        CallICFGNode* callICFGNode = pag->getICFG()->getCallICFGNode(svfCall);
+        FunExitICFGNode* exitICFGNode = pag->getICFG()->getFunExitICFGNode(svfFun);
+        addRetEdge(srcret, dstrec,callICFGNode, exitICFGNode);
+    }
+
+    u32_t itA = 0, ieA = cs->arg_size();
+    Function::const_arg_iterator itF = F->arg_begin(), ieF = F->arg_end();
+    //Go through the fixed parameters.
+    DBOUT(DPAGBuild, outs() << "      args:");
+    for (; itF != ieF; ++itA, ++itF)
+    {
+        //Some programs (e.g. Linux kernel) leave unneeded parameters empty.
+        if (itA == ieA)
+        {
+            DBOUT(DPAGBuild, outs() << " !! not enough args\n");
+            break;
+        }
+        const Value* AA = cs->getArgOperand(itA), *FA = &*itF; //current actual/formal arg
+
+        DBOUT(DPAGBuild, outs() << "process actual parm  " << LLVMModuleSet::getLLVMModuleSet()->getSVFValue(AA)->toString() << " \n");
+
+        NodeID dstFA = getValueNode(FA);
+        NodeID srcAA = getValueNode(AA);
+        CallICFGNode* icfgNode = pag->getICFG()->getCallICFGNode(svfCall);
+        FunEntryICFGNode* entry = pag->getICFG()->getFunEntryICFGNode(svfFun);
+        addCallEdge(srcAA, dstFA, icfgNode, entry);
+    }
+    //Any remaining actual args must be varargs.
+    if (F->isVarArg())
+    {
+        NodeID vaF = getVarargNode(svfFun);
+        DBOUT(DPAGBuild, outs() << "\n      varargs:");
+        for (; itA != ieA; ++itA)
+        {
+            const Value* AA = cs->getArgOperand(itA);
+            NodeID vnAA = getValueNode(AA);
+            CallICFGNode* icfgNode = pag->getICFG()->getCallICFGNode(svfCall);
+            FunEntryICFGNode* entry = pag->getICFG()->getFunEntryICFGNode(svfFun);
+            addCallEdge(vnAA,vaF, icfgNode,entry);
+        }
+    }
+    if(itA != ieA)
+    {
+        /// FIXME: this assertion should be placed for correct checking except
+        /// bug program like 188.ammp, 300.twolf
+        writeWrnMsg("[handleExtCall] too many args to non-vararg func.");
+        writeWrnMsg("[handleExtCall] (" + svfCall->getSourceLoc() + ")");
+    }
+
+    // Special operations for ExternalCall.
     if (isHeapAllocExtCallViaRet(svfCall))
     {
         NodeID val = pag->getValueNode(svfInst);
