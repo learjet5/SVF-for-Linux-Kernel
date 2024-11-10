@@ -232,6 +232,27 @@ bool ExtAPI::is_realloc(const SVFFunction* F)
     return F && hasExtFuncAnnotation(F, "REALLOC_RET");
 }
 
+// Does (F) conduct write operations to one of its arguments?
+bool ExtAPI::is_arg_write(const SVFFunction* F)
+{
+    return F && hasExtFuncAnnotation(F, "WRITE_ARG");
+}
+
+// Get the position of argument which is written to.
+s32_t ExtAPI::get_write_arg_pos(const SVFFunction* F)
+{
+    std::string writeArg = getExtFuncAnnotation(F, "WRITE_ARG");
+    assert(!writeArg.empty() && "Not an WRITE_ARG call or incorrect extern function annotation!");
+
+    std::string number;
+    for (char c : writeArg)
+    {
+        if (isdigit(c))
+            number.push_back(c);
+    }
+    assert(!number.empty() && "Incorrect naming convention for svf external functions(WRITE_ARG + number)?");
+    return std::stoi(number);
+}
 
 // Should (F) be considered "external" (either not defined in the program
 //   or a user-defined version of a known alloc or no-op)?

@@ -91,6 +91,10 @@ public:
     // Does (F) reallocate a new object?
     bool is_realloc(const SVFFunction *F);
 
+    // Extra added functions.
+    bool is_arg_write(const SVFFunction *F);
+    s32_t get_write_arg_pos(const SVFFunction *F);
+
     // Should (F) be considered "external" (either not defined in the program
     //   or a user-defined version of a known alloc or no-op)?
     bool is_ext(const SVFFunction *F);

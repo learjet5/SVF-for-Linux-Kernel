@@ -311,6 +311,15 @@ inline bool isExtCall(const SVFFunction* fun)
     return fun && ExtAPI::getExtAPI()->is_ext(fun);
 }
 
+inline bool isWriteArgExtFun(const SVFFunction* fun) {
+    return fun && ExtAPI::getExtAPI()->is_arg_write(fun);
+}
+
+inline int getWriteArgPosition(const SVFFunction* fun)
+{
+    return ExtAPI::getExtAPI()->get_write_arg_pos(fun);
+}
+
 inline bool isMemcpyExtFun(const SVFFunction* fun)
 {
     return fun && ExtAPI::getExtAPI()->is_memcpy(fun);
@@ -427,6 +436,27 @@ inline bool isExtCall(const SVFInstruction *inst)
 {
     return isExtCall(getCallee(inst));
 }
+
+inline bool isWriteArgExtCall(const CallSite cs)
+{
+    return isWriteArgExtFun(getCallee(cs));
+}
+
+inline bool isWriteArgExtCall(const SVFInstruction *inst)
+{
+    return isWriteArgExtFun(getCallee(inst));
+}
+
+inline int getWriteArgPosition(const CallSite cs)
+{
+    return getWriteArgPosition(getCallee(cs));
+}
+
+inline int getWriteArgPosition(const SVFInstruction *inst)
+{
+    return getWriteArgPosition(getCallee(inst));
+}
+//@}
 
 inline bool isHeapAllocExtCallViaArg(const CallSite cs)
 {

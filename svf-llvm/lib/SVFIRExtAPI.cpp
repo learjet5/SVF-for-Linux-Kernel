@@ -139,7 +139,6 @@ void SVFIRBuilder::handleExtCall(const CallBase* cs, const SVFFunction* svfCalle
         FunExitICFGNode* exitICFGNode = pag->getICFG()->getFunExitICFGNode(svfFun);
         addRetEdge(srcret, dstrec,callICFGNode, exitICFGNode);
     }
-
     u32_t itA = 0, ieA = cs->arg_size();
     Function::const_arg_iterator itF = F->arg_begin(), ieF = F->arg_end();
     //Go through the fixed parameters.
@@ -244,6 +243,29 @@ void SVFIRBuilder::handleExtCall(const CallBase* cs, const SVFFunction* svfCalle
         }
         if(SVFUtil::isa<PointerType>(cs->getType()))
             addCopyEdge(getValueNode(cs->getArgOperand(0)), getValueNode(cs));
+    }
+    else if(isWriteArgExtFun(svfCallee)) 
+    {
+        // dummyObj —(Addr)—>dummyVal —(Load)—> dummyVal_Val —(Store)—>argVal
+        u32_t arg_pos = getWriteArgPosition(svfCallee);
+        const SVFValue* arg = svfCall->getArgOperand(arg_pos);
+        if (arg->getType()->isPointerTy()) {
+            NodeID vnArg = pag->getValueNode(arg);
+            NodeID dummyObj = pag->addDummyObjNode(arg->getType());
+            NodeID dummyVal1 = pag->addDummyValNode();
+            NodeID dummyVal2 = pag->addDummyValNode();
+            if (vnArg && dummyObj && dummyVal1 && dummyVal2) {
+                addAddrEdge(dummyObj, dummyVal1);
+                addLoadEdge(dummyVal1, dummyVal2);
+                addStoreEdge(dummyVal2, vnArg);
+            }
+        }
+        else
+        {
+            writeWrnMsg("Arg being written to must be pointer type");
+            // We don't care the write operations to arguments like int-typed C variables. 
+            // We may only meet &gv passed to writeArgExtFun, i.e. pointer-arg points to gv.
+        }
     }
     else if(svfCallee->getName().compare("dlsym") == 0)
     {
