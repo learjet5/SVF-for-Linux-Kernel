@@ -883,10 +883,16 @@ void SVFIRBuilder::visitCallSite(CallBase* cs)
         {
             handleDirectCall(cs, callee);
         }
+    } 
+    else if (const InlineAsm *inlineAsm = SVFUtil::dyn_cast<InlineAsm>(cs->getCalledOperand()))
+    {
+        // Handle inline assembly calls.
+        SVFUtil::errs() << SVFUtil::errMsg("Inline assembly call found: " + inlineAsm->getAsmString() + "\n");
+        handleAsmCall(cs, inlineAsm);
     }
     else
     {
-        //If the callee was not identified as a function (null F), this is indirect.
+        //If the callee was not identified as a function (null F) or an InlineAsm, this is indirect.
         handleIndCall(cs);
     }
 }
@@ -1156,6 +1162,37 @@ void SVFIRBuilder::handleIndCall(CallBase* cs)
     pag->addIndirectCallsites(cbn,pag->getValueNode(svfcalledval));
 }
 
+void SVFIRBuilder::handleAsmCall(CallBase* cs, const InlineAsm *inlineAsm) {
+    // const SVFInstruction* svfInst = LLVMModuleSet::getLLVMModuleSet()->getSVFInstruction(cs);
+    // const SVFCallInst* svfCall = SVFUtil::cast<SVFCallInst>(svfInst);
+    // 基础的addCallEdge操作是必须的。
+    u32_t itA = 0, ieA = cs->arg_size();
+    for (; itA != ieA; ++itA) {
+        // const Value* AA = cs->getArgOperand(itA);
+        // TODO：要为call asm添加call/ret edge的话，还需要扩展下ICFG的基础设施。
+        // NodeID dstFA = getValueNode(cs);
+        // NodeID srcAA = getValueNode(AA);
+        // CallICFGNode* icfgNode = pag->getICFG()->getCallICFGNode(svfCall);
+        // FunEntryICFGNode* entry = pag->getICFG()->getIntraICFGNode(svfInst);
+        // addCallEdge(srcAA, dstFA, icfgNode, entry);
+    }
+    
+    // 根据asm信息匹配摘要；根据摘要添加PAG边。
+    if (inlineAsm->getAsmString() == "lock; incl $0" || inlineAsm->getAsmString() == "lock; xchgl $0, $1"
+        || inlineAsm->getAsmString() == "lock; subl $1, $0") {
+        SVFValue* arg = LLVMModuleSet::getLLVMModuleSet()->getSVFValue(cs->getArgOperand(0));
+        NodeID vnArg = pag->getValueNode(arg);
+        NodeID dummyObj = pag->addDummyObjNode(arg->getType());
+        NodeID dummyVal1 = pag->addDummyValNode();
+        NodeID dummyVal2 = pag->addDummyValNode();
+        if (vnArg && dummyObj && dummyVal1 && dummyVal2) {
+            addAddrEdge(dummyObj, dummyVal1);
+            addLoadEdge(dummyVal1, dummyVal2);
+            addStoreEdge(dummyVal2, vnArg);
+        }
+    }
+}
+
 void SVFIRBuilder::updateCallGraph(PTACallGraph* callgraph)
 {
     PTACallGraph::CallEdgeMap::const_iterator iter = callgraph->getIndCallMap().begin();
@@ -1188,6 +1225,8 @@ void SVFIRBuilder::updateCallGraph(PTACallGraph* callgraph)
     if (Options::PAGDotGraph())
         pag->dump("svfir_final");
 }
+
+
 
 /*
  * TODO: more sanity checks might be needed here

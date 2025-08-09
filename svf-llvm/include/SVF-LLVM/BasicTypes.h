@@ -41,6 +41,7 @@
 #include <llvm/IR/GetElementPtrTypeIterator.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Statepoint.h>
+#include <llvm/IR/InlineAsm.h>
 
 #include <llvm/Analysis/MemoryLocation.h>
 #include <llvm/Analysis/DominanceFrontier.h>
@@ -178,6 +179,7 @@ typedef llvm::BinaryOperator BinaryOperator;
 typedef llvm::UnaryOperator UnaryOperator;
 typedef llvm::UndefValue UndefValue;
 typedef llvm::GEPOperator GEPOperator;
+typedef llvm::InlineAsm InlineAsm;
 
 // Related to Switch Case
 typedef std::pair<const BasicBlock*, const ConstantInt*> SuccBBAndCondValPair;

@@ -220,6 +220,11 @@ void SymbolTableBuilder::buildMemModel(SVFModule* svfModule)
 
                     // TODO handle inlineAsm
                     /// if (SVFUtil::isa<InlineAsm>(Callee))
+                    // 理论上，这里是可以遍历到所有call asm语句的。
+                    if (SVFUtil::isa<InlineAsm>(Callee)) {
+                        const InlineAsm* inlineAsm = SVFUtil::dyn_cast<InlineAsm>(Callee);
+                        SVFUtil::errs() << SVFUtil::errMsg("  [SymbolTableBuilder] InlineAsm: " + inlineAsm->getAsmString() + "\n");
+                    }
                 }
                 //@}
             }

@@ -231,6 +231,9 @@ protected:
     /// Handle indirect call
     void handleIndCall(CallBase* cs);
 
+    /// Handle assembly call
+    void handleAsmCall(CallBase* cs, const InlineAsm *inlineAsm);
+
     /// Handle external call
     //@{
     virtual const Type *getBaseTypeAndFlattenedFields(const Value *V, std::vector<AccessPath> &fields, const Value* szValue);
